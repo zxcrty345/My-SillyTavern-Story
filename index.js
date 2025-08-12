@@ -10,13 +10,15 @@ const SECRET_KEY = "qweasd123";
 // ------------------------------------
 
 const SERVER_URL = `http://${SERVER_IP}`;
-const API_BASE_URL = `${SERVER_URL}/api`; // 使用API基地址，更清晰
+const API_BASE_URL = `${SERVER_URL}/api`;
+// 【核心修正】将STORIES_BASE_PATH提升为全局常量
+const STORIES_BASE_PATH = `${SERVER_URL}/stories/`; 
 
 const defaultSettings = {
     enabled: true,
 };
 
-// --- 全局变量，用于在不同函数间传递状态 ---
+// --- 全局变量 ---
 let allStories = [];
 let currentStory = null;
 
@@ -27,7 +29,6 @@ async function apiCall(endpoint, payload) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...payload, secret: SECRET_KEY })
     });
-    // 增加对非200 OK响应的检查
     if (!response.ok) {
         const errorText = await response.text();
         throw new Error(`API Error ${response.status}: ${errorText}`);
@@ -35,23 +36,20 @@ async function apiCall(endpoint, payload) {
     return response.json();
 }
 
-// 【新增】打开编辑/上传窗口的函数
+// 打开编辑/上传窗口的函数
 async function openEditModal(storyToEdit = null) {
     if ($("#story_upload_modal_overlay").length > 0) return;
     const uploadHtml = await $.get(`${extensionFolderPath}/upload.html`);
     $("body").append(uploadHtml);
-
     const isEditing = storyToEdit !== null;
     $("#story_upload_modal_content h3").text(isEditing ? "修改小剧场" : "上传新的小剧场");
     $("#submit_upload_btn").text(isEditing ? "确认修改" : "确认上传");
-
     if (isEditing) {
         $("#upload_title").val(storyToEdit.title);
         $("#upload_author").val(storyToEdit.author);
         $("#upload_tags").val(storyToEdit.tags.join(', '));
         $("#upload_content").val(storyToEdit.content);
     }
-
     $("#story_upload_close_btn").on("click", () => $("#story_upload_modal_overlay").remove());
     $("#submit_upload_btn").on("click", async () => {
         const payload = {
@@ -61,12 +59,8 @@ async function openEditModal(storyToEdit = null) {
             tags: $("#upload_tags").val().split(',').map(t => t.trim()).filter(Boolean),
             content: $("#upload_content").val(),
         };
-        if (!payload.title || !payload.content) { 
-            $("#upload_status").text("错误：标题和内容不能为空！").css('color', 'red');
-            return; 
-        }
+        if (!payload.title || !payload.content) { $("#upload_status").text("错误：标题和内容不能为空！").css('color', 'red'); return; }
         $("#upload_status").text(isEditing ? "修改中..." : "上传中...");
-
         try {
             const endpoint = isEditing ? 'update' : 'upload';
             const result = await apiCall(endpoint, payload);
@@ -75,19 +69,14 @@ async function openEditModal(storyToEdit = null) {
                 setTimeout(() => {
                     $("#story_upload_modal_overlay").remove();
                     closeLibraryModal();
-                    openLibraryModal(); // 刷新主列表
+                    openLibraryModal();
                 }, 1500);
-            } else { 
-                $("#upload_status").text(`错误: ${result.message}`).css('color', 'red'); 
-            }
-        } catch (error) { 
-            console.error("操作失败:", error);
-            $("#upload_status").text(`错误：${error.message}`).css('color', 'red');
-        }
+            } else { $("#upload_status").text(`错误: ${result.message}`).css('color', 'red'); }
+        } catch (error) { console.error("操作失败:", error); $("#upload_status").text(`错误：${error.message}`).css('color', 'red'); }
     });
 }
 
-// 【新增】删除剧本的函数
+// 删除剧本的函数
 async function deleteStory(storyToDelete) {
     if (!confirm(`确定要删除剧本 "${storyToDelete.title}" 吗？此操作不可恢复！`)) return;
     try {
@@ -95,53 +84,35 @@ async function deleteStory(storyToDelete) {
         if (result.success) {
             alert(result.message);
             closeLibraryModal();
-            openLibraryModal(); // 刷新主列表
+            openLibraryModal();
         } else {
             alert(`删除失败: ${result.message}`);
         }
-    } catch (error) {
-        console.error("删除失败:", error);
-        alert(`删除失败：${error.message}`);
-    }
+    } catch (error) { console.error("删除失败:", error); alert(`删除失败：${error.message}`); }
 }
 
-// 【核心修改】重构renderStoryList
+// 重构renderStoryList
 function renderStoryList(stories) {
     const listContainer = $("#library_story_list_container").empty();
     if (stories.length === 0) { listContainer.append('<p>没有找到匹配的剧本。</p>'); return; }
-    
     stories.forEach(storyData => {
         const item = $('<div class="library-story-item"></div>');
         const title = $('<span></span>').text(storyData.title);
-        
         const actions = $('<div class="story-item-actions"></div>');
         const editBtn = $('<button class="story-item-btn" title="编辑">✏️</button>');
         const deleteBtn = $('<button class="story-item-btn" title="删除">🗑️</button>');
-        
         editBtn.on('click', async (e) => {
-            e.stopPropagation(); // 防止触发父元素的点击事件
+            e.stopPropagation();
             try {
-                // 总是重新加载最新的内容以供编辑
                 const fullStory = await loadStory(storyData.id, true);
                 if (fullStory) {
                     openEditModal(fullStory);
-                } else {
-                    alert("加载剧本内容失败，无法编辑。");
-                }
-            } catch (error) {
-                console.error("编辑前加载失败:", error);
-                alert("加载剧本内容失败，无法编辑。");
-            }
+                } else { alert("加载剧本内容失败，无法编辑。"); }
+            } catch (error) { console.error("编辑前加载失败:", error); alert("加载剧本内容失败，无法编辑。"); }
         });
-
-        deleteBtn.on('click', (e) => {
-            e.stopPropagation();
-            deleteStory(storyData);
-        });
-
+        deleteBtn.on('click', (e) => { e.stopPropagation(); deleteStory(storyData); });
         actions.append(editBtn, deleteBtn);
         item.append(title, actions);
-
         item.on('click', function() {
             $(".library-story-item.active").removeClass('active');
             $(this).addClass('active');
@@ -151,23 +122,19 @@ function renderStoryList(stories) {
     });
 }
 
-// 【修改】loadStory 增加一个返回值和参数
+// loadStory 函数现在可以直接使用全局的 STORIES_BASE_PATH
 async function loadStory(storyId, returnStory = false) {
     try {
         const response = await fetch(`${STORIES_BASE_PATH}${storyId}.json?t=${new Date().getTime()}`);
         if (!response.ok) throw new Error('Network response was not ok.');
         const storyContent = await response.json();
-        
-        // 更新allStories数组中的完整内容，以便编辑时使用
         const storyIndex = allStories.findIndex(s => s.id === storyId);
         if(storyIndex > -1) {
             allStories[storyIndex] = { ...allStories[storyIndex], ...storyContent };
         }
-        
         currentStory = storyContent;
         displayStoryContent();
         if (returnStory) return currentStory;
-
     } catch (error) { 
         console.error("小剧场库: 加载剧本文件失败", error);
         $("#library_story_content").text('加载剧本内容失败。');
@@ -180,29 +147,32 @@ async function loadSettings() {
     Object.assign(extension_settings[extensionName], { ...defaultSettings, ...extension_settings[extensionName] });
     $("#enable_story_library").prop("checked", extension_settings[extensionName].enabled);
 }
+
 function onEnableChange() {
     extension_settings[extensionName].enabled = $("#enable_story_library").prop("checked");
     saveSettingsDebounced();
     updateToolbarButton();
 }
+
 function updateToolbarButton() {
     $("#story_library_toolbar").toggle(extension_settings[extensionName].enabled);
 }
+
 function closeLibraryModal() {
     $("#story_library_modal_overlay").remove();
 }
+
 async function openLibraryModal() {
     if ($("#story_library_modal_overlay").length > 0) return;
     const modalHtml = await $.get(`${extensionFolderPath}/library.html`);
     $("body").append(modalHtml);
-    const STORIES_BASE_PATH = `${SERVER_URL}/stories/`; // 定义在函数内部，因为它依赖于外部变量
     
     function displayStoryContent() {
         if (!currentStory) return;
         $("#library_story_title").text(currentStory.title);
         $("#library_story_meta").html(`<span>作者: ${currentStory.author}</span> | <span>标签: ${currentStory.tags.join(', ')}</span>`);
         $("#library_story_content").text(currentStory.content);
-        $("#library_actions").css('display', 'flex'); // 确保操作栏正确显示
+        $("#library_actions").css('display', 'flex');
     }
     
     function handleSearchAndFilter() {
@@ -230,7 +200,7 @@ async function openLibraryModal() {
         try {
             const response = await fetch(INDEX_PATH + '?t=' + new Date().getTime());
             if (!response.ok) throw new Error('Network response was not ok.');
-            allStories = await response.json(); // allStories现在只包含元数据
+            allStories = await response.json();
             renderTags();
             handleSearchAndFilter();
         } catch (error) { console.error("小剧场库: 加载 index.json 失败!", error); $("#library_tag_container").html(`<p>加载索引失败。</p>`); }
@@ -239,7 +209,7 @@ async function openLibraryModal() {
     $("#story_library_close_btn").on("click", closeLibraryModal);
     $("#story_library_modal_overlay").on("click", function(event) { if (event.target === this) closeLibraryModal(); });
     $("#story_search_input").on('input', handleSearchAndFilter);
-    $("#open_upload_modal_btn").on("click", () => openEditModal(null)); // 上传就是编辑一个空对象
+    $("#open_upload_modal_btn").on("click", () => openEditModal(null));
     $("#library_send_btn").on("click", () => {
         if (currentStory && currentStory.content) {
             sendTextDirectly(currentStory.content);
