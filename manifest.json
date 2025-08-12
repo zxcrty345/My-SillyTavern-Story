@@ -1,6 +1,6 @@
 {
     "display_name": "小剧场库",
-    "loading_order": 16,
+    "loading_order": 999,
     "requires": [],
     "optional": [],
     "js": "index.js",
@@ -9,4 +9,5 @@
     "version": "1.0.6",
     "homePage": "https://github.com/zxcrty345/My-SillyTavern-Stories"
 }
+
 
