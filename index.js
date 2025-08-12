@@ -1,10 +1,9 @@
-// 【核心修正】我们不再从 script.js 导入任何东西，因为它不是一个标准的模块
-// import { getContext, loadExtensionSettings } from "../../../extensions.js";
-// import { saveSettingsDebounced, sendChat, runCmd } from "../../../../script.js";
+// 【最终修正】我们不再从 script.js 导入任何东西，因为它是非模块化的
+// import { ... } from '../../../../script.js';
 
 // ====================== 【全局配置区】 ======================
 const extensionName = "小剧场库";
-const extensionFolderPath = `scripts/extensions/third-party/My-SillyTavern-Stories`;
+const extensionFolderPath = `scripts/extensions/third-party/My-Silly-Tavern-Stories`;
 
 const SERVER_IP = "1.92.112.106"; 
 const SECRET_KEY = "qweasd123"; 
