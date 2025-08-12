@@ -3,7 +3,7 @@ import { saveSettingsDebounced, sendChat, runCmd } from "../../../../script.js";
 
 // ====================== 【全局配置区】 ======================
 const extensionName = "小剧场库";
-const extensionFolderPath = `scripts/extensions/third-party/My-Silly-Tavern-Stories`;
+const extensionFolderPath = `scripts/extensions/third-party/My-SillyTavern-Stories`;
 
 const SERVER_IP = "1.92.112.106"; 
 const SECRET_KEY = "qweasd123"; 
@@ -173,3 +173,4 @@ jQuery(async () => {
         console.error(`[${extensionName}] 加载 menu.html 或绑定事件时失败:`, error);
     }
 });
+
