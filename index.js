@@ -197,11 +197,6 @@ async function loadSettings() {
 function onEnableChange() {
     extension_settings[extensionName].enabled = $("#enable_story_library").prop("checked");
     saveSettingsDebounced();
-    updateToolbarButton();
-}
-
-function updateToolbarButton() {
-    $("#story_library_toolbar").toggle(extension_settings[extensionName].enabled);
 }
 
 function closeLibraryModal() {
@@ -260,31 +255,43 @@ async function openLibraryModal() {
 
 jQuery(async () => {
     try {
+        // 加载插件设置到 "Extensions" 面板
         const settingsHtml = await $.get(`${extensionFolderPath}/settings.html`);
         $("#extensions_settings2").append(settingsHtml);
-        const toolbarHtml = await $.get(`${extensionFolderPath}/toolbar.html`);
-        if ($("#qr--bar").length === 0) { $("#send_form").append('<div class="flex-container flexGap5" id="qr--bar"></div>'); }
-        $(toolbarHtml).insertAfter("#qr--bar");
+        
+        // 为“启用小剧场库”复选框绑定事件
         $("#enable_story_library").on("input", onEnableChange);
-        $("#open_story_library_btn").on("click", openLibraryModal);
+        
+        // 加载用户设置
         await loadSettings();
-        updateToolbarButton();
         
         // 【新增功能】将“小剧场库”按钮也添加到左侧的扩展菜单中
         function addLibraryButtonToExtensionsMenu() {
-            const extensionsMenu = $('#extensionsMenu');
-            if (extensionsMenu.length > 0) {
-                const menuButtonHtml = `
-                    <div id="story_library_in_extension_menu_btn" class="list-group-item flex-container flexGap5 interactable">
-                        <div class="fa-solid fa-book-open extensionsMenuExtensionButton"></div>
-                        <span>小剧场库</span>
-                    </div>
-                `;
-                extensionsMenu.append(menuButtonHtml);
-                $('#story_library_in_extension_menu_btn').on('click', openLibraryModal);
+            // 只有在插件启用时才添加按钮
+            if (extension_settings[extensionName]?.enabled) {
+                const extensionsMenu = $('#extensionsMenu');
+                if (extensionsMenu.length > 0) {
+                    // 避免重复添加按钮
+                    if ($('#story_library_in_extension_menu_btn').length === 0) {
+                         const menuButtonHtml = `
+                            <div id="story_library_in_extension_menu_btn" class="list-group-item flex-container flexGap5 interactable">
+                                <div class="fa-solid fa-book-open extensionsMenuExtensionButton"></div>
+                                <span>小剧场库</span>
+                            </div>
+                        `;
+                        extensionsMenu.append(menuButtonHtml);
+                        $('#story_library_in_extension_menu_btn').on('click', openLibraryModal);
+                    }
+                }
+            } else {
+                 // 如果插件被禁用，则移除按钮
+                 $('#story_library_in_extension_menu_btn').remove();
             }
         }
+
+        // 首次加载时和每次启用/禁用插件时都更新扩展菜单中的按钮
         addLibraryButtonToExtensionsMenu();
+        $("#enable_story_library").on("input", addLibraryButtonToExtensionsMenu);
 
     } catch (error) {
         console.error(`加载插件【${extensionName}】时发生严重错误:`, error);
