@@ -110,3 +110,30 @@
     .form-actions { text-align: center; }
     #submit_upload_btn { width: 100%; }
 }
+
+/* --- 剧本列表项的新样式 --- */
+.library-story-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.story-item-actions {
+    display: none; /* 默认隐藏 */
+    flex-shrink: 0;
+}
+.library-story-item:hover .story-item-actions,
+.library-story-item.active .story-item-actions {
+    display: block; /* 悬停或激活时显示 */
+}
+.story-item-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 2px 5px;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+}
+.story-item-btn:hover {
+    opacity: 1;
+}
