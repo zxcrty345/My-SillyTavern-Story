@@ -1,11 +1,10 @@
 {
     "display_name": "小剧场库",
-    "loading_order": 200,
+    "loading_order": 150,
     "requires": [],
     "optional": [],
     "js": "index.js",
     "css": "style.css",
-    "type": "module",
-    "author": "zxcrty345 (最终重构版)",
+    "author": "您的名字 (最终修正版)",
     "version": "4.0.0"
 }
