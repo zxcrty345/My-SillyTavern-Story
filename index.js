@@ -1,5 +1,6 @@
-import { getContext, loadExtensionSettings } from "../../../extensions.js";
-import { saveSettingsDebounced, sendChat, runCmd } from "../../../../script.js";
+// 【核心修正】我们不再从 script.js 导入任何东西，因为它不是一个标准的模块
+// import { getContext, loadExtensionSettings } from "../../../extensions.js";
+// import { saveSettingsDebounced, sendChat, runCmd } from "../../../../script.js";
 
 // ====================== 【全局配置区】 ======================
 const extensionName = "小剧场库";
@@ -155,8 +156,12 @@ const StoryLibrary = {
 
     sendTextDirectly: async function(text) {
         if (!text) return;
-        // 【最终修正】使用我们已经验证过可用的 runCmd 函数
-        runCmd(`/send ${text}`);
+        // 【最终修正】直接使用全局的 runCmd 函数
+        if (typeof runCmd === 'function') {
+            runCmd(`/send ${text}`);
+        } else {
+            console.error("【小剧场库】致命错误：未找到全局发送函数 runCmd！");
+        }
     },
 };
 
@@ -173,4 +178,3 @@ jQuery(async () => {
         console.error(`[${extensionName}] 加载 menu.html 或绑定事件时失败:`, error);
     }
 });
-
