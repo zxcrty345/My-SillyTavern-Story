@@ -2,7 +2,7 @@
     'use strict';
 
     // ====================== 【全局配置区】 ======================
-    const extensionName = "小剧场库"; // 将显示在扩展菜单上的名字
+    const extensionName = "小剧场库";
     const extensionFolderPath = `scripts/extensions/third-party/My-SillyTavern-Stories`;
 
     const SERVER_IP = "1.92.112.106"; 
@@ -13,13 +13,10 @@
     const STORIES_BASE_PATH = `${SERVER_URL}/stories/`; 
     // ==========================================================
 
-    // --- 全局变量 ---
     let allStories = [];
     let currentStory = null;
 
-    // 将所有功能函数都放在这里，以保持结构清晰
     const StoryLibrary = {
-        // ... (这里包含了我们之前写的所有功能函数)
         apiCall: async function(endpoint, payload) {
             const response = await fetch(`${API_BASE_URL}/${endpoint}`, {
                 method: 'POST',
@@ -48,17 +45,35 @@
             }
             $("#story_upload_close_btn").on("click", () => $("#story_upload_modal_overlay").remove());
             $("#submit_upload_btn").on("click", async () => {
-                const payload = { id: isEditing ? storyToEdit.id : undefined, title: $("#upload_title").val(), author: $("#upload_author").val(), tags: $("#upload_tags").val().split(',').map(t => t.trim()).filter(Boolean), content: $("#upload_content").val() };
-                if (!payload.title || !payload.content) { $("#upload_status").text("错误：标题和内容不能为空！").css('color', 'red'); return; }
+                const payload = {
+                    id: isEditing ? storyToEdit.id : undefined,
+                    title: $("#upload_title").val(),
+                    author: $("#upload_author").val(),
+                    tags: $("#upload_tags").val().split(',').map(t => t.trim()).filter(Boolean),
+                    content: $("#upload_content").val(),
+                };
+                if (!payload.title || !payload.content) {
+                    $("#upload_status").text("错误：标题和内容不能为空！").css('color', 'red');
+                    return;
+                }
                 $("#upload_status").text(isEditing ? "修改中..." : "上传中...");
                 try {
                     const endpoint = isEditing ? 'update' : 'upload';
                     const result = await this.apiCall(endpoint, payload);
                     if (result.success) {
                         $("#upload_status").text(result.message).css('color', 'lightgreen');
-                        setTimeout(() => { $("#story_upload_modal_overlay").remove(); this.closeLibraryModal(); this.openLibraryModal(); }, 1500);
-                    } else { $("#upload_status").text(`错误: ${result.message}`).css('color', 'red'); }
-                } catch (error) { console.error("操作失败:", error); $("#upload_status").text(`错误：${error.message}`).css('color', 'red'); }
+                        setTimeout(() => {
+                            $("#story_upload_modal_overlay").remove();
+                            this.closeLibraryModal();
+                            this.openLibraryModal();
+                        }, 1500);
+                    } else {
+                        $("#upload_status").text(`错误: ${result.message}`).css('color', 'red');
+                    }
+                } catch (error) {
+                    console.error("操作失败:", error);
+                    $("#upload_status").text(`错误：${error.message}`).css('color', 'red');
+                }
             });
         },
 
@@ -70,13 +85,21 @@
                     alert(result.message);
                     this.closeLibraryModal();
                     this.openLibraryModal();
-                } else { alert(`删除失败: ${result.message}`); }
-            } catch (error) { console.error("删除失败:", error); alert(`删除失败：${error.message}`); }
+                } else {
+                    alert(`删除失败: ${result.message}`);
+                }
+            } catch (error) {
+                console.error("删除失败:", error);
+                alert(`删除失败：${error.message}`);
+            }
         },
 
         renderStoryList: function(stories) {
             const listContainer = $("#library_story_list_container").empty();
-            if (stories.length === 0) { listContainer.append('<p>没有找到匹配的剧本。</p>'); return; }
+            if (stories.length === 0) {
+                listContainer.append('<p>没有找到匹配的剧本。</p>');
+                return;
+            }
             stories.forEach(storyData => {
                 const item = $('<div class="library-story-item"></div>');
                 const title = $('<span></span>').text(storyData.title);
@@ -87,11 +110,20 @@
                     e.stopPropagation();
                     try {
                         const fullStory = await this.loadStory(storyData.id, true);
-                        if (fullStory) { this.openEditModal(fullStory); }
-                        else { alert("加载剧本内容失败，无法编辑。"); }
-                    } catch (error) { console.error("编辑前加载失败:", error); alert("加载剧本内容失败，无法编辑。"); }
+                        if (fullStory) {
+                            this.openEditModal(fullStory);
+                        } else {
+                            alert("加载剧本内容失败，无法编辑。");
+                        }
+                    } catch (error) {
+                        console.error("编辑前加载失败:", error);
+                        alert("加载剧本内容失败，无法编辑。");
+                    }
                 });
-                deleteBtn.on('click', (e) => { e.stopPropagation(); this.deleteStory(storyData); });
+                deleteBtn.on('click', (e) => {
+                    e.stopPropagation();
+                    this.deleteStory(storyData);
+                });
                 actions.append(editBtn, deleteBtn);
                 item.append(title, actions);
                 item.on('click', () => {
@@ -109,11 +141,13 @@
                 if (!response.ok) throw new Error('Network response was not ok.');
                 const storyContent = await response.json();
                 const storyIndex = allStories.findIndex(s => s.id === storyId);
-                if(storyIndex > -1) { allStories[storyIndex] = { ...allStories[storyIndex], ...storyContent }; }
+                if(storyIndex > -1) {
+                    allStories[storyIndex] = { ...allStories[storyIndex], ...storyContent };
+                }
                 currentStory = storyContent;
                 this.displayStoryContent();
                 if (returnStory) return currentStory;
-            } catch (error) { 
+            } catch (error) {
                 console.error("小剧场库: 加载剧本文件失败", error);
                 $("#library_story_content").text('加载剧本内容失败。');
                 if (returnStory) return null;
@@ -136,13 +170,17 @@
             if ($("#story_library_modal_overlay").length > 0) return;
             const modalHtml = await $.get(`${extensionFolderPath}/library.html`);
             $("body").append(modalHtml);
-            
+
             const handleSearchAndFilter = () => {
                 const searchTerm = $("#story_search_input").val().toLowerCase();
                 const activeTag = $(".library-tag-btn.active").data('tag');
                 let filteredStories = allStories;
-                if (activeTag !== 'all' && activeTag) { filteredStories = filteredStories.filter(s => s.tags.includes(activeTag)); }
-                if (searchTerm) { filteredStories = filteredStories.filter(s => s.title.toLowerCase().includes(searchTerm)); }
+                if (activeTag !== 'all' && activeTag) {
+                    filteredStories = filteredStories.filter(s => s.tags.includes(activeTag));
+                }
+                if (searchTerm) {
+                    filteredStories = filteredStories.filter(s => s.title.toLowerCase().includes(searchTerm));
+                }
                 this.renderStoryList(filteredStories);
             };
 
@@ -152,7 +190,11 @@
                 tags.forEach(tag => {
                     const btn = $('<button class="library-tag-btn"></button').data('tag', tag).text(tag === 'all' ? '全部' : tag);
                     if (tag === 'all') btn.addClass('active');
-                    btn.on('click', () => { $(".library-tag-btn.active").removeClass('active'); btn.addClass('active'); handleSearchAndFilter(); });
+                    btn.on('click', () => {
+                        $(".library-tag-btn.active").removeClass('active');
+                        btn.addClass('active');
+                        handleSearchAndFilter();
+                    });
                     tagContainer.append(btn);
                 });
             };
@@ -165,18 +207,25 @@
                     allStories = await response.json();
                     renderTags();
                     handleSearchAndFilter();
-                } catch (error) { console.error("小剧场库: 加载 index.json 失败!", error); $("#library_tag_container").html(`<p>加载索引失败。</p>`); }
+                } catch (error) {
+                    console.error("小剧场库: 加载 index.json 失败!", error);
+                    $("#library_tag_container").html(`<p>加载索引失败。</p>`);
+                }
             };
 
             $("#story_library_close_btn").on("click", this.closeLibraryModal);
-            $("#story_library_modal_overlay").on("click", (event) => { if (event.target === event.currentTarget) this.closeLibraryModal(); });
+            $("#story_library_modal_overlay").on("click", (event) => {
+                if (event.target === event.currentTarget) this.closeLibraryModal();
+            });
             $("#story_search_input").on('input', handleSearchAndFilter);
             $("#open_upload_modal_btn").on("click", () => this.openEditModal(null));
             $("#library_send_btn").on("click", () => {
                 if (currentStory && currentStory.content) {
                     this.sendTextDirectly(currentStory.content);
                     this.closeLibraryModal();
-                } else { alert("请先从左侧列表中选择一个剧本！"); }
+                } else {
+                    alert("请先从左侧列表中选择一个剧本！");
+                }
             });
             
             await initStoryLibrary();
@@ -184,36 +233,53 @@
 
         sendTextDirectly: async function(text) {
             if (!text) return;
-            if (typeof window.triggerSlash === 'function') { await window.triggerSlash(text); return; }
-            if (window.parent && typeof window.parent.triggerSlash === 'function') { await window.parent.triggerSlash(text); return; }
+            if (typeof window.triggerSlash === 'function') {
+                await window.triggerSlash(text);
+                return;
+            }
+            if (window.parent && typeof window.parent.triggerSlash === 'function') {
+                await window.parent.triggerSlash(text);
+                return;
+            }
             console.error("【小剧场库】致命错误：未找到官方发送函数 triggerSlash！将回退到模拟输入。");
             const sendButton = $('#send_but');
             const inputTextArea = $('#send_textarea');
             if (sendButton.length > 0 && inputTextArea.length > 0) {
                 inputTextArea.val(text);
                 inputTextArea[0].dispatchEvent(new Event('input', { bubbles: true }));
-                setTimeout(() => { 
+                setTimeout(() => {
                     sendButton.click();
-                    inputTextArea.val(''); 
+                    inputTextArea.val('');
                     inputTextArea[0].dispatchEvent(new Event('input', { bubbles: true }));
                 }, 100); 
+            }
+        },
+
+        initSettings: async function() {
+            try {
+                const settingsHtml = await $.get(`${extensionFolderPath}/settings.html`);
+                $("#extensions_settings2").append(settingsHtml);
+            } catch (error) {
+                console.error(`[${extensionName}] 加载 settings.html 失败:`, error);
             }
         }
     };
 
-    // 【最关键的一步】将“打开主窗口”这个动作，注册到SillyTavern的扩展菜单
-    try {
-        if (window.registerExtension) {
-            window.registerExtension({
-                name: extensionName,
-                callback: StoryLibrary.openLibraryModal.bind(StoryLibrary), // 绑定this，确保函数内部的this指向StoryLibrary对象
-            });
-            console.log(`[${extensionName}] 成功加载并注册到扩展菜单。`);
-        } else {
-            console.warn(`[${extensionName}] 无法注册，SillyTavern的 registerExtension 函数未找到。`);
+    $(document).ready(function() {
+        StoryLibrary.initSettings();
+        try {
+            if (window.registerExtension) {
+                window.registerExtension({
+                    name: extensionName,
+                    callback: StoryLibrary.openLibraryModal.bind(StoryLibrary),
+                });
+                console.log(`[${extensionName}] 成功加载并注册到扩展菜单。`);
+            } else {
+                console.warn(`[${extensionName}] 无法注册，SillyTavern的 registerExtension 函数未找到。`);
+            }
+        } catch (error) {
+            console.error(`[${extensionName}] 注册时发生错误:`, error);
         }
-    } catch (error) {
-        console.error(`[${extensionName}] 注册时发生错误:`, error);
-    }
+    });
 
 })();
