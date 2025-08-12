@@ -224,21 +224,34 @@ async function openLibraryModal() {
 
 async function sendTextDirectly(text) {
     if (!text) return;
-    if (typeof window.triggerSlash === 'function') { await window.triggerSlash(text); return; }
-    if (window.parent && typeof window.parent.triggerSlash === 'function') { await window.parent.triggerSlash(text); return; }
-    console.error("【小剧场库】致命错误：未找到官方发送函数 triggerSlash！将回退到模拟输入。");
+
+    // 优先尝试官方的 triggerSlash 函数，这是最正确、最高效的方式。
+    if (typeof window.triggerSlash === 'function') {
+        console.log("【小剧场库】找到 triggerSlash，正在直接发送文本...");
+        await window.triggerSlash(text);
+        return;
+    }
+    
+    // 如果在特殊环境（如iframe）中，尝试父窗口的函数
+    if (window.parent && typeof window.parent.triggerSlash === 'function') {
+        console.log("【小剧场库】找到 parent.triggerSlash，正在直接发送文本...");
+        await window.parent.triggerSlash(text);
+        return;
+    }
+
+    // 如果连官方API都找不到，执行最后的备用方案：模拟输入
+    console.error("【小剧场库】致命错误：未找到官方发送函数 triggerSlash！将回退到模拟输入，这可能不稳定。");
     const sendButton = $('#send_but');
     const inputTextArea = $('#send_textarea');
     if (sendButton.length > 0 && inputTextArea.length > 0) {
-        inputTextArea.val(text);
+        const originalText = inputTextArea.val();
+        inputTextArea.val(text); // 填入纯文本
         inputTextArea[0].dispatchEvent(new Event('input', { bubbles: true }));
         setTimeout(() => { 
-            sendButton.click();
-            inputTextArea.val(''); 
-            inputTextArea[0].dispatchEvent(new Event('input', { bubbles: true }));
-        }, 100); 
+            sendButton.click();}, 50);
     }
 }
+// ============================================================================
 
 jQuery(async () => {
     try {
@@ -255,4 +268,5 @@ jQuery(async () => {
         console.error(`加载插件【${extensionName}】时发生严重错误:`, error);
     }
 });
+
 
