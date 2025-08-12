@@ -1,7 +1,7 @@
 import { extension_settings, getContext, loadExtensionSettings } from "../../../extensions.js";
 import { saveSettingsDebounced } from "../../../../script.js";
 
-const extensionName = "My-Silly-Tavern-Stories";
+const extensionName = "My-SillyTavern-Stories";
 const extensionFolderPath = `scripts/extensions/third-party/${extensionName}`;
 
 // ---【请在这里配置你的服务器信息】---
@@ -255,3 +255,4 @@ jQuery(async () => {
         console.error(`加载插件【${extensionName}】时发生严重错误:`, error);
     }
 });
+
