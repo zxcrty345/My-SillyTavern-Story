@@ -11,7 +11,6 @@ const SECRET_KEY = "qweasd123";
 
 const SERVER_URL = `http://${SERVER_IP}`;
 const API_BASE_URL = `${SERVER_URL}/api`;
-// 【核心修正】将STORIES_BASE_PATH提升为全局常量
 const STORIES_BASE_PATH = `${SERVER_URL}/stories/`; 
 
 const defaultSettings = {
@@ -21,6 +20,17 @@ const defaultSettings = {
 // --- 全局变量 ---
 let allStories = [];
 let currentStory = null;
+
+// ====================== 【核心修正】 ======================
+// 将 displayStoryContent 函数提升到全局作用域
+function displayStoryContent() {
+    if (!currentStory) return;
+    $("#library_story_title").text(currentStory.title);
+    $("#library_story_meta").html(`<span>作者: ${currentStory.author}</span> | <span>标签: ${currentStory.tags.join(', ')}</span>`);
+    $("#library_story_content").text(currentStory.content);
+    $("#library_actions").css('display', 'flex');
+}
+// =========================================================
 
 // --- API调用函数 ---
 async function apiCall(endpoint, payload) {
@@ -91,7 +101,7 @@ async function deleteStory(storyToDelete) {
     } catch (error) { console.error("删除失败:", error); alert(`删除失败：${error.message}`); }
 }
 
-// 重构renderStoryList
+// renderStoryList 函数现在可以安全地调用全局的 loadStory
 function renderStoryList(stories) {
     const listContainer = $("#library_story_list_container").empty();
     if (stories.length === 0) { listContainer.append('<p>没有找到匹配的剧本。</p>'); return; }
@@ -122,7 +132,7 @@ function renderStoryList(stories) {
     });
 }
 
-// loadStory 函数现在可以直接使用全局的 STORIES_BASE_PATH
+// loadStory 函数现在可以安全地调用全局的 displayStoryContent
 async function loadStory(storyId, returnStory = false) {
     try {
         const response = await fetch(`${STORIES_BASE_PATH}${storyId}.json?t=${new Date().getTime()}`);
@@ -133,7 +143,7 @@ async function loadStory(storyId, returnStory = false) {
             allStories[storyIndex] = { ...allStories[storyIndex], ...storyContent };
         }
         currentStory = storyContent;
-        displayStoryContent();
+        displayStoryContent(); // 现在可以安全调用
         if (returnStory) return currentStory;
     } catch (error) { 
         console.error("小剧场库: 加载剧本文件失败", error);
@@ -166,14 +176,6 @@ async function openLibraryModal() {
     if ($("#story_library_modal_overlay").length > 0) return;
     const modalHtml = await $.get(`${extensionFolderPath}/library.html`);
     $("body").append(modalHtml);
-    
-    function displayStoryContent() {
-        if (!currentStory) return;
-        $("#library_story_title").text(currentStory.title);
-        $("#library_story_meta").html(`<span>作者: ${currentStory.author}</span> | <span>标签: ${currentStory.tags.join(', ')}</span>`);
-        $("#library_story_content").text(currentStory.content);
-        $("#library_actions").css('display', 'flex');
-    }
     
     function handleSearchAndFilter() {
         const searchTerm = $("#story_search_input").val().toLowerCase();
