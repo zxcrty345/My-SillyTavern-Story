@@ -21,16 +21,44 @@ const defaultSettings = {
 let allStories = [];
 let currentStory = null;
 
-// ====================== 【核心修正】 ======================
-// 将 displayStoryContent 函数提升到全局作用域
-function displayStoryContent() {
-    if (!currentStory) return;
-    $("#library_story_title").text(currentStory.title);
-    $("#library_story_meta").html(`<span>作者: ${currentStory.author}</span> | <span>标签: ${currentStory.tags.join(', ')}</span>`);
-    $("#library_story_content").text(currentStory.content);
-    $("#library_actions").css('display', 'flex');
+// ====================== 【坚守您的、绝对正确的发送逻辑】 ======================
+/**
+ * 您的、经过验证的、绝对正确的发送函数。
+ * 它优先使用triggerSlash发送纯文本，失败则回退到模拟输入（但不恢复现场）。
+ * @param {string} text - 要发送的纯文本内容。
+ */
+async function sendTextDirectly(text) {
+    if (!text) return;
+
+    // 优先尝试官方的 triggerSlash 函数，这是最正确、最高效的方式。
+    if (typeof window.triggerSlash === 'function') {
+        console.log("【小剧场库】找到 triggerSlash，正在直接发送文本...");
+        await window.triggerSlash(text);
+        return;
+    }
+    
+    // 如果在特殊环境（如iframe）中，尝试父窗口的函数
+    if (window.parent && typeof window.parent.triggerSlash === 'function') {
+        console.log("【小剧场库】找到 parent.triggerSlash，正在直接发送文本...");
+        await window.parent.triggerSlash(text);
+        return;
+    }
+
+    // 如果连官方API都找不到，执行最后的备用方案
+    console.error("【小剧场库】致命错误：未找到官方发送函数 triggerSlash！将回退到模拟输入。");
+    const sendButton = $('#send_but');
+    const inputTextArea = $('#send_textarea');
+    if (sendButton.length > 0 && inputTextArea.length > 0) {
+        const originalText = inputTextArea.val();
+        inputTextArea.val(text);
+        inputTextArea[0].dispatchEvent(new Event('input', { bubbles: true }));
+        setTimeout(() => { 
+            sendButton.click();
+        }, 50);
+    }
 }
-// =========================================================
+// ============================================================================
+
 
 // --- API调用函数 ---
 async function apiCall(endpoint, payload) {
@@ -101,7 +129,15 @@ async function deleteStory(storyToDelete) {
     } catch (error) { console.error("删除失败:", error); alert(`删除失败：${error.message}`); }
 }
 
-// renderStoryList 函数现在可以安全地调用全局的 loadStory
+function displayStoryContent() {
+    if (!currentStory) return;
+    $("#library_story_title").text(currentStory.title);
+    $("#library_story_meta").html(`<span>作者: ${currentStory.author}</span> | <span>标签: ${currentStory.tags.join(', ')}</span>`);
+    $("#library_story_content").text(currentStory.content);
+    $("#library_actions").css('display', 'flex');
+}
+
+// renderStoryList 函数
 function renderStoryList(stories) {
     const listContainer = $("#library_story_list_container").empty();
     if (stories.length === 0) { listContainer.append('<p>没有找到匹配的剧本。</p>'); return; }
@@ -132,7 +168,7 @@ function renderStoryList(stories) {
     });
 }
 
-// loadStory 函数现在可以安全地调用全局的 displayStoryContent
+// loadStory 函数
 async function loadStory(storyId, returnStory = false) {
     try {
         const response = await fetch(`${STORIES_BASE_PATH}${storyId}.json?t=${new Date().getTime()}`);
@@ -143,7 +179,7 @@ async function loadStory(storyId, returnStory = false) {
             allStories[storyIndex] = { ...allStories[storyIndex], ...storyContent };
         }
         currentStory = storyContent;
-        displayStoryContent(); // 现在可以安全调用
+        displayStoryContent();
         if (returnStory) return currentStory;
     } catch (error) { 
         console.error("小剧场库: 加载剧本文件失败", error);
@@ -222,37 +258,6 @@ async function openLibraryModal() {
     await initStoryLibrary();
 }
 
-async function sendTextDirectly(text) {
-    if (!text) return;
-
-    // 优先尝试官方的 triggerSlash 函数，这是最正确、最高效的方式。
-    if (typeof window.triggerSlash === 'function') {
-        console.log("【小剧场库】找到 triggerSlash，正在直接发送文本...");
-        await window.triggerSlash(text);
-        return;
-    }
-    
-    // 如果在特殊环境（如iframe）中，尝试父窗口的函数
-    if (window.parent && typeof window.parent.triggerSlash === 'function') {
-        console.log("【小剧场库】找到 parent.triggerSlash，正在直接发送文本...");
-        await window.parent.triggerSlash(text);
-        return;
-    }
-
-    // 如果连官方API都找不到，执行最后的备用方案：模拟输入
-    console.error("【小剧场库】致命错误：未找到官方发送函数 triggerSlash！将回退到模拟输入，这可能不稳定。");
-    const sendButton = $('#send_but');
-    const inputTextArea = $('#send_textarea');
-    if (sendButton.length > 0 && inputTextArea.length > 0) {
-        const originalText = inputTextArea.val();
-        inputTextArea.val(text); // 填入纯文本
-        inputTextArea[0].dispatchEvent(new Event('input', { bubbles: true }));
-        setTimeout(() => { 
-            sendButton.click();}, 50);
-    }
-}
-// ============================================================================
-
 jQuery(async () => {
     try {
         const settingsHtml = await $.get(`${extensionFolderPath}/settings.html`);
@@ -268,5 +273,3 @@ jQuery(async () => {
         console.error(`加载插件【${extensionName}】时发生严重错误:`, error);
     }
 });
-
-
