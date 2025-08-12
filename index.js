@@ -4,7 +4,7 @@
 
     // ====================== 【全局配置区】 ======================
     const extensionName = "小剧场库";
-    const extensionFolderPath = `scripts/extensions/third-party/My-Silly-Tavern-Stories`;
+    const extensionFolderPath = `scripts/extensions/third-party/My-SillyTavern-Stories`;
 
     const SERVER_IP = "1.92.112.106";
     const SECRET_KEY = "qweasd123";
@@ -264,3 +264,4 @@
     });
 
 })();
+
