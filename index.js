@@ -269,6 +269,43 @@ jQuery(async () => {
         $("#open_story_library_btn").on("click", openLibraryModal);
         await loadSettings();
         updateToolbarButton();
+    }
+    
+         /**
+         * 将“小剧场库”按钮添加到左侧的扩展菜单中。
+         * 功能与底部工具栏按钮完全相同。
+         */
+        function addLibraryButtonToExtensionsMenu() {
+            // 1. 获取 SillyTavern 的扩展菜单容器
+            const extensionsMenu = $('#extensionsMenu');
+
+            // 2. 检查菜单容器是否存在，防止出错
+            if (extensionsMenu.length > 0) {
+
+                // 3. 定义新按钮的 HTML 结构，确保有一个唯一的ID
+                const menuButtonHtml = `
+                    <div id="story_library_in_extension_menu_btn" class="list-group-item flex-container flexGap5 interactable">
+                        <div class="fa-solid fa-book-open extensionsMenuExtensionButton"></div>
+                        <span>小剧场库</span>
+                    </div>
+                `;
+
+                // 4. 将新按钮的 HTML 添加到扩展菜单的末尾
+                extensionsMenu.append(menuButtonHtml);
+
+                // 5. 为这个新创建的按钮绑定点击事件，调用已有的 openLibraryModal 函数
+                $('#story_library_in_extension_menu_btn').on('click', () => {
+                    openLibraryModal();
+                });
+            }
+        }
+
+        // 调用函数来执行添加操作
+        addLibraryButtonToExtensionsMenu();
+        
+        // ==================== 【新增代码结束】 ====================
+        // ==================================================================
+
     } catch (error) {
         console.error(`加载插件【${extensionName}】时发生严重错误:`, error);
     }
