@@ -184,6 +184,12 @@
         flex-shrink: 0; /* 防止被压缩 */
     }
 
+    /* --- 新增：限制剧本列表的高度并添加滚动条 --- */
+    #library_story_list_container {
+        max-height: 180px; /* 预估值，大约是4个列表项的高度 */
+        overflow-y: auto;  /* 当内容超出时，显示垂直滚动条 */
+    }
+
     #library_send_btn {
         width: 100%;
     }
