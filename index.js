@@ -9,7 +9,11 @@ const SERVER_IP = "1.92.112.106";
 const SECRET_KEY = "qweasd123"; 
 // ------------------------------------
 
-const SERVER_URL = `http://${SERVER_IP}`;
+// ==================== 【核心修复】 ====================
+// 使用协议相对URL，使其能同时兼容 HTTP 和 HTTPS 页面
+const SERVER_URL = `//${SERVER_IP}`;
+// ======================================================
+
 const API_BASE_URL = `${SERVER_URL}/api`;
 const STORIES_BASE_PATH = `${SERVER_URL}/stories/`; 
 
