@@ -1,11 +1,14 @@
 {
-    "display_name": "小剧场库",
+    "display_name": "小剧场库 (离线版)",
     "loading_order": 16,
     "requires": [],
     "optional": [],
-    "js": "index.js",
+    "js": [
+        "jszip.min.js",
+        "db.js",
+        "index.js"
+    ],
     "css": "style.css",
     "author": "124519329",
-    "version": "1.0.6",
-    "homePage": "https://github.com/zxcrty345/My-SillyTavern-Stories"
+    "version": "3.0.0-offline"
 }
