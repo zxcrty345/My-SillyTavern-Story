@@ -1,7 +1,7 @@
 <div class="story-library-settings">
     <div class="inline-drawer">
         <div class="inline-drawer-toggle inline-drawer-header">
-            <b>小剧场库</b>
+            <b>小剧场库 (离线版)</b>
             <div class="inline-drawer-icon fa-solid fa-circle-chevron-down down"></div>
         </div>
         <div class="inline-drawer-content">
@@ -9,7 +9,17 @@
                 <input id="enable_story_library" type="checkbox" />
                 <label for="enable_story_library">启用小剧场库</label>
             </div>
-            <div class="settings-note" style="font-size: 12px; color: var(--SmartThemeEmColor); margin-top: 10px;">
+            <hr>
+            <h4>剧本数据管理</h4>
+            <p class="settings-note">通过导入 .zip 数据包来更新或替换您的本地剧本库。</p>
+            <div class="file-input-wrapper" style="margin-top: 10px;">
+                 <button id="import_story_zip_btn" class="menu_button">导入剧本数据包 (.zip)</button>
+                 <!-- 这个文件输入框是隐藏的，由上面的按钮触发 -->
+                 <input type="file" id="story_zip_importer" accept=".zip" style="display: none;">
+            </div>
+            <div class="settings-note" style="font-size: 12px; color: var(--SmartThemeEmColor); margin-top: 15px;">
+                <p><strong>注意：</strong>导入操作会**完全覆盖**您现有的本地剧本库！</p>
+                <a href="【这里放您的downloader.html页面网址】" target="_blank">点此前往更新页面下载最新数据包</a>
             </div>
         </div>
     </div>
