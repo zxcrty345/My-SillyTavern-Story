@@ -210,3 +210,10 @@
         width: 100%;
     }
 }
+
+/* 【核心修改】修复设置页面按钮文字竖排的问题 */
+#import_story_zip_append_btn,
+#import_story_zip_replace_btn,
+#export_story_zip_btn {
+    white-space: nowrap; /* 强制文字不换行 */
+}
