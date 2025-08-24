@@ -2,7 +2,7 @@
 //  story_library_main.js - 离线版核心逻辑 (已重命名)
 // ============================================
 
-const extensionName = "My-SillyTavern-Stories";
+const extensionName = "My-SillyTavern-Story";
 const extensionFolderPath = `scripts/extensions/third-party/${extensionName}`;
 
 function loadScript(src) {
@@ -323,3 +323,4 @@ Promise.all([
 }).catch(error => {
     console.error('小剧场库：加载核心依赖失败，插件无法启动。', error);
 });
+
