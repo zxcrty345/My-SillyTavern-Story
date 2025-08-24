@@ -1,6 +1,6 @@
 {
     "display_name": "小剧场库 (离线版)",
-    "loading_order": 16,
+    "loading_order": 20,
     "requires": [],
     "optional": [],
     "js": "story_library_main.js",
@@ -8,3 +8,4 @@
     "author": "124519329",
     "version": "3.1.0-offline-prefixed"
 }
+
