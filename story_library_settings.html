@@ -1,3 +1,4 @@
+<!-- story_library_settings.html -->
 <div class="story-library-settings">
     <div class="inline-drawer">
         <div class="inline-drawer-toggle inline-drawer-header">
@@ -11,15 +12,29 @@
             </div>
             <hr>
             <h4>剧本数据管理</h4>
-            <p class="settings-note">通过导入 .zip 数据包来更新或替换您的本地剧本库。</p>
-            <div class="file-input-wrapper" style="margin-top: 10px;">
-                 <button id="import_story_zip_btn" class="menu_button">导入剧本数据包 (.zip)</button>
-                 <!-- 这个文件输入框是隐藏的，由上面的按钮触发 -->
-                 <input type="file" id="story_zip_importer" accept=".zip" style="display: none;">
+            
+            <!-- 【核心修改】将导入功能细化 -->
+            <div class="settings-group" style="margin-top: 10px;">
+                <p class="settings-note">从 .zip 数据包更新您的本地剧本库。</p>
+                <div style="display: flex; gap: 10px; margin-top: 5px;">
+                    <button id="import_story_zip_append_btn" class="menu_button" title="只添加压缩包里新增的剧本，不影响您已有的剧本">增量导入</button>
+                    <button id="import_story_zip_replace_btn" class="menu_button" title="清空您当前的剧本库，完全替换为压缩包的内容">完全替换</button>
+                </div>
             </div>
+
+            <!-- 【核心修改】新增导出功能 -->
+            <div class="settings-group" style="margin-top: 15px;">
+                <p class="settings-note">将您当前的本地剧本库导出为一个 .zip 数据包。</p>
+                <div style="margin-top: 5px;">
+                    <button id="export_story_zip_btn" class="menu_button">导出本地剧本库</button>
+                </div>
+            </div>
+
+            <!-- 隐藏的文件输入框，由JS触发 -->
+            <input type="file" id="story_zip_importer" accept=".zip" style="display: none;">
+
             <div class="settings-note" style="font-size: 12px; color: var(--SmartThemeEmColor); margin-top: 15px;">
-                <p><strong>注意：</strong>导入操作会**完全覆盖**您现有的本地剧本库！</p>
-                <a href="http://1.92.112.106/downloader.html" target="_blank">点此前往更新页面下载最新数据包</a>
+                <a href="【这里放您的downloader.html页面网址】" target="_blank">点此前往更新页面下载官方数据包</a>
             </div>
         </div>
     </div>
