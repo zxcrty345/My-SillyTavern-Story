@@ -3,8 +3,8 @@
     "loading_order": 16,
     "requires": [],
     "optional": [],
-    "js": "index.js",
-    "css": "style.css",
+    "js": "story_library_main.js",
+    "css": "story_library_style.css",
     "author": "124519329",
-    "version": "3.0.0-offline"
+    "version": "3.1.0-offline-prefixed"
 }
