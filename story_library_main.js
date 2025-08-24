@@ -1,8 +1,8 @@
 // ============================================
-//  story_library_main.js - 离线版 v3.2 (新增导入模式和导出功能)
+//  story_library_main.js - v3.3 (修复事件绑定)
 // ============================================
 
-const extensionName = "My-SillyTavern-Story";
+const extensionName = "My-SillyTavern-Stories";
 const extensionFolderPath = `scripts/extensions/third-party/${extensionName}`;
 
 function loadScript(src) {
@@ -322,10 +322,10 @@ async function main() {
             $("#extensions_settings2").append(settingsHtml);
 
             function onEnableChange() {
-                getStoryDataStore().enabled = $("#enable_story_library").prop("checked");
+                const store = getStoryDataStore();
+                store.enabled = $("#enable_story_library").prop("checked");
                 saveSettingsDebounced();
             }
-            $("#enable_story_library").on("input", onEnableChange);
 
             function addLibraryButtonToExtensionsMenu() {
                 const extensionsMenu = $('#extensionsMenu');
@@ -339,23 +339,36 @@ async function main() {
                     $('#story_library_in_extension_menu_btn').on('click', openLibraryModal);
                 }
             }
+            
+            // 【核心修复】使用事件委托来绑定事件
+            const settingsContainer = $("#extensions_settings2");
+
+            settingsContainer.on("input", "#enable_story_library", onEnableChange);
+            settingsContainer.on("click", '#import_story_zip_append_btn', () => triggerZipImport('append'));
+            settingsContainer.on("click", '#import_story_zip_replace_btn', () => triggerZipImport('replace'));
+            settingsContainer.on("click", '#export_story_zip_btn', handleZipExport);
+            
+            settingsContainer.on('change', '#story_zip_importer', function(event) {
+                handleZipImport(event.target.files[0]);
+            });
+
             addLibraryButtonToExtensionsMenu();
             
             await loadExtensionSettings(extensionName);
-            $("#enable_story_library").prop("checked", getStoryDataStore().enabled !== false);
+            // 确保即使第一次加载没有设置，也能正确获取 enabled 状态
+            const store = getStoryDataStore();
+            if (store.enabled === undefined) {
+                store.enabled = true; // 默认启用
+            }
+            $("#enable_story_library").prop("checked", store.enabled);
             
-            $('#import_story_zip_append_btn').on('click', () => triggerZipImport('append'));
-            $('#import_story_zip_replace_btn').on('click', () => triggerZipImport('replace'));
-            $('#export_story_zip_btn').on('click', handleZipExport);
-            $('#story_zip_importer').on('change', function(event) {
-                handleZipImport(event.target.files[0]);
-            });
         } catch (error) {
             console.error(`加载插件【${extensionName}】时发生严重错误:`, error);
         }
     });
 }
 
+// 【启动器】
 Promise.all([
     loadScript('story_library_jszip.min.js'),
     loadScript('story_library_db.js')
