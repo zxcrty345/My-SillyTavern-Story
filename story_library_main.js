@@ -1,8 +1,9 @@
 // ============================================
-//  story_library_main.js - v3.3 (修复事件绑定)
+//  story_library_main.js - 最终版 v3.4 (解决ID冲突)
 // ============================================
 
-const extensionName = "My-SillyTavern-Story";
+// 【重要】确保这个名字和你的文件夹名一致，并且和在线版不同
+const extensionName = "My-SillyTavern-Story"; 
 const extensionFolderPath = `scripts/extensions/third-party/${extensionName}`;
 
 function loadScript(src) {
@@ -328,26 +329,26 @@ async function main() {
             }
 
             function addLibraryButtonToExtensionsMenu() {
+                // 【核心修复】根据 extensionName 生成唯一的ID
+                const uniqueId = `ext-menu-btn-${extensionName}`;
                 const extensionsMenu = $('#extensionsMenu');
-                if (extensionsMenu.length > 0 && $('#story_library_in_extension_menu_btn').length === 0) {
+                
+                if (extensionsMenu.length > 0 && $(`#${uniqueId}`).length === 0) {
                     const menuButtonHtml = `
-                        <div id="story_library_in_extension_menu_btn" class="list-group-item flex-container flexGap5 interactable">
+                        <div id="${uniqueId}" class="list-group-item flex-container flexGap5 interactable">
                             <div class="fa-solid fa-book-open extensionsMenuExtensionButton"></div>
-                            <span>小剧场库 (离线版)</span>
+                            <span>小剧场库 (离线)</span>
                         </div>`;
                     extensionsMenu.append(menuButtonHtml);
-                    $('#story_library_in_extension_menu_btn').on('click', openLibraryModal);
+                    $(`#${uniqueId}`).on('click', openLibraryModal);
                 }
             }
             
-            // 【核心修复】使用事件委托来绑定事件
             const settingsContainer = $("#extensions_settings2");
-
             settingsContainer.on("input", "#enable_story_library", onEnableChange);
             settingsContainer.on("click", '#import_story_zip_append_btn', () => triggerZipImport('append'));
             settingsContainer.on("click", '#import_story_zip_replace_btn', () => triggerZipImport('replace'));
             settingsContainer.on("click", '#export_story_zip_btn', handleZipExport);
-            
             settingsContainer.on('change', '#story_zip_importer', function(event) {
                 handleZipImport(event.target.files[0]);
             });
@@ -355,10 +356,9 @@ async function main() {
             addLibraryButtonToExtensionsMenu();
             
             await loadExtensionSettings(extensionName);
-            // 确保即使第一次加载没有设置，也能正确获取 enabled 状态
             const store = getStoryDataStore();
             if (store.enabled === undefined) {
-                store.enabled = true; // 默认启用
+                store.enabled = true;
             }
             $("#enable_story_library").prop("checked", store.enabled);
             
@@ -378,4 +378,3 @@ Promise.all([
 }).catch(error => {
     console.error('小剧场库：加载核心依赖失败，插件无法启动。', error);
 });
-
