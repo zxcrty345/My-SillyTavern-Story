@@ -1,5 +1,5 @@
 // ============================================
-//  story_library_main.js - 最终版 v3.4 (解决ID冲突)
+//  story_library_main.js - 最终版 v3.5 (启用/禁用联动显示按钮)
 // ============================================
 
 // 【重要】确保这个名字和你的文件夹名一致，并且和在线版不同
@@ -321,27 +321,38 @@ async function main() {
         try {
             const settingsHtml = await $.get(`/${extensionFolderPath}/story_library_settings.html`);
             $("#extensions_settings2").append(settingsHtml);
+            
+            // 【核心修改】将 addLibraryButtonToExtensionsMenu 和 onEnableChange 移到这里
+            // 这样它们可以共享作用域内的变量，逻辑更清晰
+            
+            const uniqueId = `ext-menu-btn-${extensionName}`; // 根据插件名生成唯一ID
+
+            function updateExtensionMenuButton() {
+                const store = getStoryDataStore();
+                const extensionsMenu = $('#extensionsMenu');
+                
+                if (store.enabled) {
+                    // 如果启用，且按钮不存在，则创建
+                    if (extensionsMenu.length > 0 && $(`#${uniqueId}`).length === 0) {
+                        const menuButtonHtml = `
+                            <div id="${uniqueId}" class="list-group-item flex-container flexGap5 interactable">
+                                <div class="fa-solid fa-book-open extensionsMenuExtensionButton"></div>
+                                <span>小剧场库 (离线)</span>
+                            </div>`;
+                        extensionsMenu.append(menuButtonHtml);
+                        $(`#${uniqueId}`).on('click', openLibraryModal);
+                    }
+                } else {
+                    // 如果禁用，则移除按钮
+                    $(`#${uniqueId}`).remove();
+                }
+            }
 
             function onEnableChange() {
                 const store = getStoryDataStore();
                 store.enabled = $("#enable_story_library").prop("checked");
                 saveSettingsDebounced();
-            }
-
-            function addLibraryButtonToExtensionsMenu() {
-                // 【核心修复】根据 extensionName 生成唯一的ID
-                const uniqueId = `ext-menu-btn-${extensionName}`;
-                const extensionsMenu = $('#extensionsMenu');
-                
-                if (extensionsMenu.length > 0 && $(`#${uniqueId}`).length === 0) {
-                    const menuButtonHtml = `
-                        <div id="${uniqueId}" class="list-group-item flex-container flexGap5 interactable">
-                            <div class="fa-solid fa-book-open extensionsMenuExtensionButton"></div>
-                            <span>小剧场库 (离线)</span>
-                        </div>`;
-                    extensionsMenu.append(menuButtonHtml);
-                    $(`#${uniqueId}`).on('click', openLibraryModal);
-                }
+                updateExtensionMenuButton(); // 启用/禁用时立即更新按钮状态
             }
             
             const settingsContainer = $("#extensions_settings2");
@@ -352,15 +363,16 @@ async function main() {
             settingsContainer.on('change', '#story_zip_importer', function(event) {
                 handleZipImport(event.target.files[0]);
             });
-
-            addLibraryButtonToExtensionsMenu();
             
             await loadExtensionSettings(extensionName);
             const store = getStoryDataStore();
             if (store.enabled === undefined) {
-                store.enabled = true;
+                store.enabled = true; // 默认启用
             }
             $("#enable_story_library").prop("checked", store.enabled);
+            
+            // 首次加载时，根据设置决定是否显示按钮
+            updateExtensionMenuButton();
             
         } catch (error) {
             console.error(`加载插件【${extensionName}】时发生严重错误:`, error);
